@@ -1,0 +1,44 @@
+Config { 
+         font = "xft:Hasklug Nerd Font:weight=bold:pixelsize=13:antialias=true:hinting=true"
+       , additionalFonts = 
+           [ "xft:Mononoki Nerd Font:pixelsize=16:antialias=true:hinting=true"
+           ]
+       , alpha = 0
+       , fgColor = "#dddddd"
+       , position     = TopSize L 93 30
+       , lowerOnStart = True
+       , hideOnStart  = False
+       , allDesktops  = True
+       , persistent   = True
+       , iconRoot     = ".icons/xmobar/"
+       , commands = [
+                      Run Com "echo" ["<fc=#ffffff><fn=1>\xe61f</fn></fc>"] "haskell" 3600
+                    , Run Com "echo" ["<fc=lightblue><fn=1>\xf313</fn></fc>"] "nixos" 3600
+                    , Run Com "whoami" [] "user" 0
+                    , Run Com "hostname" [] "host" 0
+                        -- Cpu usage in percent
+                    , Run Cpu ["-t", "<fc=#ff79c6><fn=2>\xf108</fn></fc>   <total>% ","-H","50","--high","red"] 20
+                        -- Ram used number and percent
+                    , Run Memory ["-t", "<fc=#ff79c6><fn=2>\xf233</fn></fc>   <used>M (<usedratio>%) "] 20
+                        -- Disk space free
+                    , Run DiskU [("/", "<fc=#ff79c6><fn=2>\xf0c7</fn></fc>   <free> free ")] [] 60
+                    , Run Com "echo" ["<fc=#ff79c6><fn=2>\xf242</fn></fc>"] "baticon" 3600
+                        -- Battery
+                    , Run BatteryP ["BAT0"] ["-t", "<acstatus>  <left>% "] 360
+                        -- Time and date
+                    , Run Date "<fc=#ff79c6><fn=2>\xf017</fn></fc>  %H:%M - %a %d %b %Y " "date" 50
+                    , Run Weather "KBDL"
+                        [ "--template", "<fc=#ff79c6><fn=2>\xe302</fn></fc>   <tempC> °C "
+                        ] 36000
+                    , Run Alsa "default" "Master"
+                        [ "--template", "<fc=#ff79c6><fn=1>\xfa7d</fn></fc>   <volumestatus> "
+                        , "--suffix", "True"
+                        , "--"
+                        , "--on", ""
+                        ]
+                    , Run StdinReader
+                    ]
+       , sepChar = "%"
+       , alignSep = "}{"
+       , template = "%nixos%  <fc=lightblue>%user%@%host%</fc>   %haskell%  %StdinReader% }{  <box type=Bottom width=1 mb=3 color=lightblue>%date%</box>  <box type=Bottom width=1 mb=3 color=lightblue>%KBDL%</box>  <box type=Bottom width=1 mb=3 color=lightblue>%baticon%  %battery%</box>  <box type=Bottom width=1 mb=3 color=lightblue> %alsa:default:Master%</box>  <box type=Bottom width=1 mb=3 color=lightblue>%cpu%</box>  <box type=Bottom width=1 mb=3 color=lightblue>%memory%</box>  <box type=Bottom width=1 mb=3 color=lightblue>%disku%</box> "
+       }
