@@ -31,8 +31,10 @@ in {
   };
 
   networking.hostName = "nixos"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+ # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   networking.networkmanager.enable = true;
+ # networking.enableIPv6 = false;
+
 
   # Set your time zone.
   time.timeZone = "America/New_York";
@@ -124,7 +126,7 @@ in {
   users.users.ian = {
     isNormalUser = true;
     initialPassword = "changeme";
-    extraGroups = [ "wheel" "video" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "networkmanager" "wheel" "video" ]; # Enable ‘sudo’ for the user.
     shell = pkgs.fish;
   };
 
@@ -142,7 +144,6 @@ in {
     gnome.seahorse
     light
     monitor
-    networkmanager
     scrot
     unzip
 
@@ -183,10 +184,10 @@ in {
   ];
 
   # Binary Cache for Haskell.nix
-  nix.binaryCachePublicKeys = [
+  nix.settings.trusted-public-keys = [
     "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
   ];
-  nix.binaryCaches = [
+  nix.settings.substituters = [
     "https://hydra.iohk.io"
   ];
 
@@ -198,6 +199,7 @@ in {
     enable = true;
     enableSSHSupport = true;
   };
+  programs.steam.enable = true;
 
   # List services that you want to enable:
   services.gnome.gnome-keyring.enable = true;
