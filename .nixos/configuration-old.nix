@@ -2,8 +2,17 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
+# let
+#  nvidia-offload = pkgs.writeShellScriptBin "nvidia-offload" ''
+#    export __NV_PRIME_RENDER_OFFLOAD=1
+#    export __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0
+#    export __GLX_VENDOR_LIBRARY_NAME=nvidia
+#    export __VK_LAYER_NV_optimus=NVIDIA_only
+#    exec -a "$0" "$@"
+#  '';
+# in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -11,17 +20,28 @@
       ./system76-nixos
     ];
 
+  # Use the systemd-boot EFI boot loader.
   boot = {
+#    kernelParams =
+#      [ "acpi_rev_override" "mem_sleep_default=deep" "intel_iommu=igfx_off" "nvidia-drm.modeset=1" ];
     kernelPackages = pkgs.linuxPackages_latest;
+#    extraModulePackages = [ config.boot.kernelPackages.nvidia_x11 ];
     loader.systemd-boot.enable = true;
     loader.efi.canTouchEfiVariables = true;
   };
 
-  networking.hostName = "nixos";
+  networking.hostName = "nixos"; # Define your hostname.
+ # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   networking.networkmanager.enable = true;
+ # networking.enableIPv6 = false;
 
+
+  # Set your time zone.
   time.timeZone = "America/New_York";
 
+  # The global useDHCP flag is deprecated, therefore explicitly set to false here.
+  # Per-interface useDHCP will be mandatory in the future, so this generated config
+  # replicates the default behaviour.
   networking.useDHCP = false;
   networking.interfaces.enp36s0.useDHCP = true;
   networking.interfaces.wlp0s20f3.useDHCP = true;
@@ -39,25 +59,58 @@
 
   # Enable the X11 windowing system.
   services.xserver = {
+#    config = ''
+#      Section "Device"
+#        Identifier "Intel Graphics"
+#        Driver     "intel"
+#        Option     "TearFree" "true"
+#        Option     "SwapbuffersWait" "true"
+#        BusID      "PCI:0:2:0"
+#      EndSection
+#
+#      Section "Device"
+#        Identifier "nvidia"
+#        Driver "nvidia"
+#        BusID "PCI:1:0:0"
+#        Option "AllowEmptyInitialConfiguration"
+#      EndSection
+#    '';
     enable = true;
+#    screenSection = ''
+#      Option "metamodes" "nvidia-auto-select +0+0 { ForceFullCompositionPipeline=On }"
+#      Option "AllowIndirectGLXProtocol" "off"
+#      Option "TripleBuffer" "on"
+#    '';
+#    videoDrivers = ["nvidia"];
+    # Enable xmonad window manager
     windowManager = {
       xmonad.enable = true;
       xmonad.enableContribAndExtras = true;
     };
     displayManager.defaultSession = "none+xmonad";
   };
+#  services.xserver.displayManager.startx.enable = true;
   
   hardware.system76 = {
     enableAll = true;
     model = "generic";
   };
  
-# Specialisation to boot with with system76-power nvidia mode (for external display or to run applications requiring GPU)
+#  hardware.nvidia.modesetting.enable = true;
+#  hardware.nvidia.prime = {
+#    offload.enable = true;
+#    intelBusId = "PCI:0:2:0";
+#    nvidiaBusId = "PCI:1:0:0";
+#  };
+# hardware.nvidia.powerManagement.enable = true;
+
   specialisation = {
     external-display.configuration = {
       system.nixos.tags = [ "external-display" ];
-    # Note: nvidia driver must be enabled for xserver to start when in nvidia mode
       services.xserver.videoDrivers = [ "nvidia" ];
+#      hardware.nvidia.prime.offload.enable = lib.mkForce false;
+#      hardware.nvidia.powerManagement.enable = lib.mkForce false;
+#      hardware.nvidia.modesetting.enable = lib.mkForce false;
     };
   };
 
@@ -98,6 +151,7 @@
   environment.systemPackages = with pkgs; [
     
     # Display
+#    nvidia-offload
     linuxKernel.packages.linux_5_16.system76-power
 
     # Utils
@@ -105,6 +159,7 @@
     wget
     git
     efibootmgr
+    fortune
     gnome.seahorse
     light
     monitor

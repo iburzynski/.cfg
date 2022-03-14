@@ -1,4 +1,5 @@
 xterm*font: xft:Hasklug Nerd Font:style=Regular:size=12
+Xft.dpi: 96
 
 ! Dracula Xresources palette
 *.foreground: #F8F8F2
