@@ -32,10 +32,11 @@
 
   # Select internationalisation properties.
   # i18n.defaultLocale = "en_US.UTF-8";
-  # console = {
-  #   font = "Lat2-Terminus16";
-  #   keyMap = "us";
-  # };
+  console = {
+  # font = "Lat2-Terminus16";
+  # keyMap = "us";
+    useXkbConfig = true;
+  };
 
   # Enable the X11 windowing system.
   services.xserver = {
@@ -45,6 +46,7 @@
       xmonad.enableContribAndExtras = true;
     };
     displayManager.defaultSession = "none+xmonad";
+    xkbOptions = "caps:escape";
   };
   
   hardware.system76 = {
@@ -64,9 +66,16 @@
   services.picom = {
     enable = true;
     inactiveOpacity = 0.8;
-    settings = {
-      "unredir-if-possible" = true;
-    };
+    backend = "glx";
+    vSync = true;
+    experimentalBackends = true;
+
+#    settings = {
+#      "unredir-if-possible" = true;
+#      "backend" = "xrender"; # try "glx" if xrender doesn't help
+#      "vsync" = true;
+#      
+#    };
   }; 
 
   # Enable CUPS to print documents.
@@ -107,9 +116,12 @@
     efibootmgr
     gnome.seahorse
     light
+    lm_sensors
     monitor
     pciutils
     scrot
+    smartmontools
+    tree
     unzip
 
     # WM
@@ -122,23 +134,33 @@
     xscreensaver
 
     # Editors
-    vim 
+    neovim 
     vscode
 
     # Web
     firefox
     brave
+    soulseekqt
     
     # Comm
     tdesktop
     zoom-us
 
     # Haskell stuff
+    cabal-install
     ghc
     haskell-language-server
     hlint
     cabal2nix
     niv
+    nix-prefetch-git
+
+    # Other languages
+    idris2
+    adoptopenjdk-bin
+    clojure
+    clojure-lsp
+    leiningen
 
   ];
   
@@ -178,6 +200,9 @@
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
+  # Nix settings
+  nix.settings.auto-optimise-store = true;
+  
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
