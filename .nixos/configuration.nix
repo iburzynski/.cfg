@@ -134,6 +134,7 @@
     xscreensaver
 
     # Editors
+    emacs
     vscode
     anki
 
