@@ -107,7 +107,7 @@
   environment.systemPackages = with pkgs; [
     
     # Display
-    linuxKernel.packages.linux_5_16.system76-power
+    linuxKernel.packages.linux_latest_libre.system76-power
 
     # Utils
     dconf
@@ -134,8 +134,8 @@
     xscreensaver
 
     # Editors
-    neovim 
     vscode
+    anki
 
     # Web
     firefox
@@ -156,6 +156,7 @@
     nix-prefetch-git
 
     # Other languages
+    python310
     idris2
     adoptopenjdk-bin
     clojure
@@ -163,7 +164,8 @@
     leiningen
 
   ];
-  
+  environment.variables.EDITOR = "nvim";
+
   # Fonts
   fonts.fonts = with pkgs; [
     mononoki
@@ -182,6 +184,11 @@
   # started in user sessions.
   programs.fish.enable = true;
   programs.mtr.enable = true;
+  programs.neovim = {
+    enable = true;
+    viAlias = true;
+    vimAlias = true;
+  };
   programs.gnupg.agent = {
     enable = true;
     enableSSHSupport = true;
