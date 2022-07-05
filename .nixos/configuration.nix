@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports =
@@ -49,10 +49,10 @@
     xkbOptions = "caps:escape";
   };
   
-  hardware.system76 = {
-    enableAll = true;
-    model = "generic";
-  };
+ hardware.system76 = {
+   enableAll = true;
+   model = "generic";
+ };
  
 # Specialisation to boot with with system76-power nvidia mode (for external display or to run applications requiring GPU)
   specialisation = {
@@ -112,9 +112,11 @@
     # Utils
     dconf
     wget
+    gcc
     git
     efibootmgr
     gnome.seahorse
+    gnutls
     light
     lm_sensors
     monitor
@@ -145,6 +147,7 @@
     
     # Comm
     tdesktop
+    whatsapp-for-linux
     zoom-us
 
     # Haskell stuff
@@ -155,9 +158,19 @@
     cabal2nix
     niv
     nix-prefetch-git
+    haskellPackages.zlib    
+
+    # Python
+    python310
+    pipenv
+
+    # Node
+    nodePackages.npm
+
+    # Deployment
+    heroku
 
     # Other languages
-    python310
     idris2
     adoptopenjdk-bin
     clojure
@@ -178,7 +191,7 @@
     "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
   ];
   nix.settings.substituters = [
-    "https://hydra.iohk.io"
+    "https://cache.iog.io"
   ];
 
   # Some programs need SUID wrappers, can be configured further or are

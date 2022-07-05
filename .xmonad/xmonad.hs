@@ -11,6 +11,7 @@ import XMonad.Util.EZConfig
 import XMonad.Util.Ungrab
 
 main = xmonad 
+     . ewmhFullscreen
      . ewmh 
    =<< statusBar "xmobar" myXmobarPP toggleStrutsKey myConfig
   where
@@ -20,7 +21,6 @@ main = xmonad
 myConfig = def
   { modMask            = mod4Mask   -- Rebind Mod to the Super key
   , layoutHook         = spacingRaw True (Border 7 7 7 7) True (Border 7 7 7 7) True $ myLayout   -- Use custom layouts 
-  , handleEventHook    = myHandleEventHook
   , startupHook        = myStartupHook
   , focusFollowsMouse  = False
   , normalBorderColor  = "#bd93f9"
@@ -49,8 +49,6 @@ myLayout = tiled ||| Mirror tiled ||| Full ||| threeCol
 myStartupHook = do
   spawn "feh --bg-fill ~/.wallpapers/haskell-galaxy.jpg"
   spawn "ps cax | grep stalonetray ; if ! [ $? -eq 0 ]; then stalonetray; fi"
-myHandleEventHook =
-  fullscreenEventHook
 
 myXmobarPP :: PP
 myXmobarPP = def
