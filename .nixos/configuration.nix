@@ -5,6 +5,14 @@
 { config, pkgs, lib, ... }:
 
 {
+
+  nix = {
+    package = pkgs.nixFlakes; # or versioned attributes like nixVersions.nix_2_8
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+   };
+
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
@@ -104,6 +112,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   nixpkgs.config.allowUnfree = true;
+
   environment.systemPackages = with pkgs; [
     
     # Display
@@ -111,20 +120,28 @@
 
     # Utils
     dconf
+    direnv
+    nix-direnv
     wget
     gcc
     git
+    gmp
     efibootmgr
     gnome.seahorse
     gnutls
+    jq
+    libsodium
     light
     lm_sensors
     monitor
+    ncurses
     pciutils
     scrot
     smartmontools
+    systemd
     tree
     unzip
+    zlib
 
     # WM
     dmenu
@@ -158,7 +175,12 @@
     cabal2nix
     niv
     nix-prefetch-git
-    haskellPackages.zlib    
+    haskellPackages.apply-refact
+    haskellPackages.hasktags
+    haskellPackages.hindent
+    haskellPackages.hoogle
+    haskellPackages.zlib
+    stylish-haskell
 
     # Python
     python310
@@ -173,6 +195,9 @@
     # Other languages
     idris2
     adoptopenjdk-bin
+    
+    # Clojure
+    clj-kondo
     clojure
     clojure-lsp
     leiningen
@@ -183,6 +208,7 @@
   # Fonts
   fonts.fonts = with pkgs; [
     mononoki
+    fira-code
     nerdfonts
   ];
 
