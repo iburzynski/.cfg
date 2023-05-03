@@ -29,7 +29,7 @@ myConfig = def
   `additionalKeysP`
   [ ("M-S-z", spawn "xscreensaver-command -lock"                )
   , ("M-S-=", unGrab *> spawn "scrot -s"                        )
-  , ("M-["  , spawn "code"                                      )
+  , ("M-["  , spawn "codium"                                    )
   , ("M-]"  , spawn "brave"                                     )
   , ("<XF86AudioLowerVolume>", spawn "amixer -q sset Master 2%-")
   , ("<XF86AudioRaiseVolume>", spawn "amixer -q sset Master 2%+")

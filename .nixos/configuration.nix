@@ -11,6 +11,11 @@
     extraOptions = ''
       experimental-features = nix-command flakes ca-derivations
     '';
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 7d";
+    };
     settings = {
       allow-import-from-derivation = true;
       auto-optimise-store = true;
@@ -35,6 +40,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./system76-nixos
+      <home-manager/nixos>
     ];
 
   hardware = {
@@ -72,6 +78,7 @@
   # firewall.enable = false;
   };
   
+  sound.enable = true;
   time.timeZone = "America/New_York";
   # Select internationalisation properties.
   # i18n.defaultLocale = "en_US.UTF-8";
@@ -82,62 +89,6 @@
     useXkbConfig = true;
   };
 
-  # Enable the X11 windowing system.
-  services.xserver = {
-    enable = true;
-    windowManager = {
-      xmonad = {
-        enable = true;
-      	enableContribAndExtras = true;
-	extraPackages = haskellPackages : [
-	  haskellPackages.xmonad-contrib
-	  haskellPackages.xmonad-extras
-	  haskellPackages.xmonad
-	  ];
-      };
-    };
-    displayManager.defaultSession = "none+xmonad";
-    xkbOptions = "caps:escape";
-    
-    # Enable touchpad support (enabled default in most desktopManager).
-    libinput.enable = true;
-    
-    # XP-Pen Tablet
-    inputClassSections = [
-      ''
-        Identifier "XP-Pen 10 inch PenTablet"
-        MatchUSBID "28bd:0905"
-        MatchIsTablet "on"
-        MatchDevicePath "/dev/input/event*"
-        Driver "wacom"
-        Option "Rotate" "HALF"
-        Option "Button3" "0"
-      ''
-      ''
-        Identifier "XP-Pen 10 inch PenTablet"
-        MatchUSBID "28bd:0905"
-        MatchIsKeyboard "on"
-        MatchDevicePath "/dev/input/event*"
-        Driver "libinput"
-      ''
-    ];
-  };
-
-  # XP-Pen Tablet
-  services.udev.extraHwdb = ''
-    evdev:input:b0003v28BDp0905*
-      KEYBOARD_KEY_70016=z
-      KEYBOARD_KEY_700e2=leftctrl
-      KEYBOARD_KEY_7001d=y
-      KEYBOARD_KEY_7002c=p
-      KEYBOARD_KEY_7000c=e
-      KEYBOARD_KEY_70008=v
-      KEYBOARD_KEY_70005=backspace
-      KEYBOARD_KEY_d0044=0x14c
-      KEYBOARD_KEY_d0045=0x14b
-  '';
-
-
 # Specialisation to boot with with system76-power nvidia mode (for external display or to run applications requiring GPU)
   specialisation = {
     external-display.configuration = {
@@ -147,9 +98,6 @@
     };
   };
 
-  # Enable sound.
-  sound.enable = true;
-  
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.ian = {
     isNormalUser = true;
@@ -170,8 +118,6 @@
     # pentablet-driver
 
     # Utils
-    autoconf
-    automake
     dconf
     direnv
     evtest
@@ -216,18 +162,8 @@
     # Editors
     emacs
     vscode
-    vscodium
-    android-studio
-    jetbrains.idea-community
 
-    # Web
     firefox
-    brave
-    soulseekqt
-
-    # Comm
-    tdesktop
-    zoom-us
 
     # Haskell stuff
     cabal-install
@@ -292,13 +228,12 @@
   # steam.enable = true;
   };
   
-  # List services that you want to enable:
   services = {
     autorandr.enable = true;
     blueman.enable = true;
-  # services.xserver.digimend.enable = true; # Enable digimend driver for XP Pen tablet
     gnome.gnome-keyring.enable = true;
     openssh.enable = true;
+    
     picom = {
       enable = true;
       inactiveOpacity = 0.8;
@@ -306,7 +241,91 @@
       vSync = true;
     # experimentalBackends = true;
     }; 
+    
     # printing.enable = true; # Enable CUPS to print documents.
+    
+    # XP-Pen Tablet
+    udev.extraHwdb = ''
+      evdev:input:b0003v28BDp0905*
+        KEYBOARD_KEY_70016=z
+        KEYBOARD_KEY_700e2=leftctrl
+        KEYBOARD_KEY_7001d=y
+        KEYBOARD_KEY_7002c=p
+        KEYBOARD_KEY_7000c=e
+        KEYBOARD_KEY_70008=v
+        KEYBOARD_KEY_70005=backspace
+        KEYBOARD_KEY_d0044=0x14c
+        KEYBOARD_KEY_d0045=0x14b
+    '';
+    
+    xserver = {
+      enable = true;
+    # digimend.enable = true; # Enable digimend driver for XP Pen tablet
+      windowManager = {
+        xmonad = {
+          enable = true;
+      	  enableContribAndExtras = true;
+	  extraPackages = haskellPackages : [
+	    haskellPackages.xmonad-contrib
+	    haskellPackages.xmonad-extras
+	    haskellPackages.xmonad
+	    ];
+        };
+      };
+      displayManager.defaultSession = "none+xmonad";
+      xkbOptions = "caps:escape";
+    
+      # Enable touchpad support (enabled default in most desktopManager).
+      libinput.enable = true;
+    
+      # XP-Pen Tablet
+      inputClassSections = [
+        ''
+          Identifier "XP-Pen 10 inch PenTablet"
+          MatchUSBID "28bd:0905"
+          MatchIsTablet "on"
+          MatchDevicePath "/dev/input/event*"
+          Driver "wacom"
+          Option "Rotate" "HALF"
+          Option "Button3" "0"
+        ''
+        ''
+          Identifier "XP-Pen 10 inch PenTablet"
+          MatchUSBID "28bd:0905"
+          MatchIsKeyboard "on"
+          MatchDevicePath "/dev/input/event*"
+          Driver "libinput"
+        ''
+      ];
+    };
+  };
+  home-manager.useGlobalPkgs = true;
+  home-manager.users.ian = { pkgs, ... }: {
+    home = { 
+      packages = with pkgs; [
+        brave
+        soulseekqt
+        tdesktop
+        (vscode-with-extensions.override {
+          vscode = vscodium;
+          vscodeExtensions = with vscode-extensions; [ 
+            asvetliakov.vscode-neovim
+            dracula-theme.theme-dracula
+            haskell.haskell
+            jnoortheen.nix-ide
+            justusadam.language-haskell
+            mkhl.direnv
+          ];
+        })
+        zoom-us
+      ];
+      stateVersion = "22.11";
+    };
+  };
+
+  system.autoUpgrade = {
+    enable = true;
+    channel = "https://nixos.org/channels/nixos-unstable";
   };
 
   # This value determines the NixOS release from which the default
@@ -316,5 +335,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "21.11"; # Did you read the comment?
-
 }
