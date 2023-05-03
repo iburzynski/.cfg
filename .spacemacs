@@ -64,11 +64,11 @@ This function should only modify configuration layer settings."
      multiple-cursors
      nixos
      ;; org
-     (shell :variables
-            shell-default-shell 'ansi-term
-            shell-default-term-shell "/bin/fish"
-            shell-default-height 30
-            shell-default-position 'bottom)
+     ;; (shell :variables
+     ;;       shell-default-shell 'ansi-term
+     ;;       shell-default-term-shell "/bin/fish"
+     ;;       shell-default-height 30
+     ;;       shell-default-position 'bottom)
      ;; spell-checking
      syntax-checking
      ;; version-control

@@ -10,9 +10,9 @@ import XMonad.Layout.Spacing
 import XMonad.Util.EZConfig
 import XMonad.Util.Ungrab
 
-main = xmonad 
+main = xmonad
      . ewmhFullscreen
-     . ewmh 
+     . ewmh
    =<< statusBar "xmobar" myXmobarPP toggleStrutsKey myConfig
   where
     toggleStrutsKey :: XConfig Layout -> (KeyMask, KeySym)
@@ -20,7 +20,7 @@ main = xmonad
 
 myConfig = def
   { modMask            = mod4Mask   -- Rebind Mod to the Super key
-  , layoutHook         = spacingRaw True (Border 7 7 7 7) True (Border 7 7 7 7) True $ myLayout   -- Use custom layouts 
+  , layoutHook         = spacingRaw True (Border 7 7 7 7) True (Border 7 7 7 7) True myLayout   -- Use custom layouts
   , startupHook        = myStartupHook
   , focusFollowsMouse  = False
   , normalBorderColor  = "#bd93f9"
@@ -36,6 +36,7 @@ myConfig = def
   , ("<XF86AudioMute>", spawn "amixer set Master toggle"        )
   , ("<XF86MonBrightnessDown>", spawn "light -U 10"             )
   , ("<XF86MonBrightnessUp>", spawn "light -A 10"               )
+  , ("M-q", spawn "xmonad --recompile; pkill xmobar; xmonad --restart")
   ]
 
 myLayout = tiled ||| Mirror tiled ||| Full ||| threeCol

@@ -1,4 +1,4 @@
-# Edit this configuration file to define what should be installed on
+#}} Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
@@ -9,9 +9,27 @@
   nix = {
     package = pkgs.nixFlakes; # or versioned attributes like nixVersions.nix_2_8
     extraOptions = ''
-      experimental-features = nix-command flakes
+      experimental-features = nix-command flakes ca-derivations
     '';
-   };
+    settings = {
+      allow-import-from-derivation = true;
+      auto-optimise-store = true;
+      keep-derivations = true;
+      keep-outputs = true;
+      trusted-users = [ "root" "ian" ];
+      # Binary Caches
+      substituters = [
+        "https://cache.iog.io"
+        "https://iohk.cachix.org"
+        "https://cache.zw3rk.com"
+      ];
+      trusted-public-keys = [
+        "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
+        "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
+        "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
+      ];
+    }; 
+  };
 
   imports =
     [ # Include the results of the hardware scan.
@@ -19,27 +37,45 @@
       ./system76-nixos
     ];
 
-  boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
-    loader.systemd-boot.enable = true;
-    loader.efi.canTouchEfiVariables = true;
+  hardware = {
+    system76 = {
+      enableAll = true;
+      model = "default";
+    };
+    pulseaudio.enable = true;
+    bluetooth.enable = true;
   };
 
-  networking.hostName = "nixos";
-  networking.networkmanager.enable = true;
+  boot = {
+    kernelPackages = pkgs.linuxPackages_latest;
+    loader = {
+      systemd-boot.enable = true;
+      efi.canTouchEfiVariables = true;
+    };
+  };
 
-  time.timeZone = "America/New_York";
-
-  networking.useDHCP = false;
-  networking.interfaces.enp36s0.useDHCP = true;
-  networking.interfaces.wlp0s20f3.useDHCP = true;
-
+  networking = {
+    hostName = "nixos";
+    networkmanager.enable = true;
+    useDHCP = false;
+    interfaces = {
+      enp36s0.useDHCP = true;
+      wlp0s20f3.useDHCP = true;
+    };
   # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
+  # proxy.default = "http://user:password@proxy:port/";
+  # proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+  # Open ports in the firewall.
+  # firewall.allowedTCPPorts = [ ... ];
+  # firewall.allowedUDPPorts = [ ... ];
+  # Or disable the firewall altogether.
+  # firewall.enable = false;
+  };
+  
+  time.timeZone = "America/New_York";
   # Select internationalisation properties.
   # i18n.defaultLocale = "en_US.UTF-8";
+
   console = {
   # font = "Lat2-Terminus16";
   # keyMap = "us";
@@ -50,18 +86,58 @@
   services.xserver = {
     enable = true;
     windowManager = {
-      xmonad.enable = true;
-      xmonad.enableContribAndExtras = true;
+      xmonad = {
+        enable = true;
+      	enableContribAndExtras = true;
+	extraPackages = haskellPackages : [
+	  haskellPackages.xmonad-contrib
+	  haskellPackages.xmonad-extras
+	  haskellPackages.xmonad
+	  ];
+      };
     };
     displayManager.defaultSession = "none+xmonad";
     xkbOptions = "caps:escape";
+    
+    # Enable touchpad support (enabled default in most desktopManager).
+    libinput.enable = true;
+    
+    # XP-Pen Tablet
+    inputClassSections = [
+      ''
+        Identifier "XP-Pen 10 inch PenTablet"
+        MatchUSBID "28bd:0905"
+        MatchIsTablet "on"
+        MatchDevicePath "/dev/input/event*"
+        Driver "wacom"
+        Option "Rotate" "HALF"
+        Option "Button3" "0"
+      ''
+      ''
+        Identifier "XP-Pen 10 inch PenTablet"
+        MatchUSBID "28bd:0905"
+        MatchIsKeyboard "on"
+        MatchDevicePath "/dev/input/event*"
+        Driver "libinput"
+      ''
+    ];
   };
-  
- hardware.system76 = {
-   enableAll = true;
-   model = "generic";
- };
- 
+
+  # XP-Pen Tablet
+  services.udev.extraHwdb = ''
+    evdev:input:b0003v28BDp0905*
+      KEYBOARD_KEY_70016=z
+      KEYBOARD_KEY_700e2=leftctrl
+      KEYBOARD_KEY_7001d=y
+      KEYBOARD_KEY_7002c=p
+      KEYBOARD_KEY_7000c=e
+      KEYBOARD_KEY_70008=v
+      KEYBOARD_KEY_70005=backspace
+      KEYBOARD_KEY_d0044=0x14c
+      KEYBOARD_KEY_d0045=0x14b
+  '';
+
+
 # Specialisation to boot with with system76-power nvidia mode (for external display or to run applications requiring GPU)
   specialisation = {
     external-display.configuration = {
@@ -71,76 +147,61 @@
     };
   };
 
-  services.picom = {
-    enable = true;
-    inactiveOpacity = 0.8;
-    backend = "glx";
-    vSync = true;
-    experimentalBackends = true;
-
-#    settings = {
-#      "unredir-if-possible" = true;
-#      "backend" = "xrender"; # try "glx" if xrender doesn't help
-#      "vsync" = true;
-#      
-#    };
-  }; 
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
-
   # Enable sound.
   sound.enable = true;
-  hardware.pulseaudio.enable = true;
-  hardware.bluetooth.enable = true;
-  services.blueman.enable = true;
-
-  # Enable brightness control
-  programs.light.enable = true;
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  services.xserver.libinput.enable = true;
-
+  
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.ian = {
     isNormalUser = true;
     initialPassword = "changeme";
-    extraGroups = [ "networkmanager" "wheel" "video" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "networkmanager" "wheel" "video" "docker" ]; # Enable ‘sudo’ for the user.
     shell = pkgs.fish;
   };
-
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
+  
+  # Packages installed in system profile
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
     
     # Display
-    linuxKernel.packages.linux_latest_libre.system76-power
+    # linuxKernel.packages.linux_latest_libre.system76-power
+
+    # Drivers
+    # pentablet-driver
 
     # Utils
+    autoconf
+    automake
     dconf
     direnv
+    evtest
     nix-direnv
     wget
+    freeglut
     gcc
     git
     gmp
     efibootmgr
-    gnome.seahorse
     gnutls
+    httpie
     jq
     libsodium
+    libsodium.dev
+    libtool
     light
     lm_sensors
     monitor
     ncurses
     pciutils
+    pkg-config
     scrot
     smartmontools
     systemd
     tree
+    unixtools.xxd
     unzip
+    usbutils
+    xclip
     zlib
 
     # WM
@@ -155,16 +216,17 @@
     # Editors
     emacs
     vscode
-    anki
+    vscodium
+    android-studio
+    jetbrains.idea-community
 
     # Web
     firefox
     brave
     soulseekqt
-    
+
     # Comm
     tdesktop
-    whatsapp-for-linux
     zoom-us
 
     # Haskell stuff
@@ -172,84 +234,81 @@
     ghc
     haskell-language-server
     hlint
-    cabal2nix
     niv
-    nix-prefetch-git
     haskellPackages.apply-refact
     haskellPackages.hasktags
     haskellPackages.hindent
     haskellPackages.hoogle
     haskellPackages.zlib
-    stylish-haskell
 
-    # Python
-    python310
-    pipenv
-
-    # Node
+    # JS stuff
+    nodejs
     nodePackages.npm
+    yarn
 
     # Deployment
+    docker-compose
     heroku
 
     # Other languages
-    idris2
-    adoptopenjdk-bin
+    kotlin
+    openjdk17-bootstrap
     
     # Clojure
-    clj-kondo
-    clojure
-    clojure-lsp
-    leiningen
+    # clj-kondo
+    # clojure
+    # clojure-lsp
+    # leiningen
 
   ];
-  environment.variables.EDITOR = "nvim";
+  # environment.variables.EDITOR = "nvim";
+
+  virtualisation.docker.enable = true;
 
   # Fonts
   fonts.fonts = with pkgs; [
     mononoki
     fira-code
+    inter
     nerdfonts
-  ];
-
-  # Binary Cache for Haskell.nix
-  nix.settings.trusted-public-keys = [
-    "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
-  ];
-  nix.settings.substituters = [
-    "https://cache.iog.io"
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
-  programs.fish.enable = true;
-  programs.mtr.enable = true;
-  programs.neovim = {
-    enable = true;
-    viAlias = true;
-    vimAlias = true;
+  programs = {
+    fish.enable = true;
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
+    light.enable = true; # Enable brightness control
+    mtr.enable = true;
+    neovim = {
+      enable = true;
+      defaultEditor = true;
+      viAlias = true;
+      vimAlias = true;
+    };
+  # steam.enable = true;
   };
-  programs.gnupg.agent = {
-    enable = true;
-    enableSSHSupport = true;
-  };
-  programs.steam.enable = true;
-
-  # List services that you want to enable:
-  services.autorandr.enable = true;
-  services.gnome.gnome-keyring.enable = true;
-  # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
-  # Nix settings
-  nix.settings.auto-optimise-store = true;
   
+  # List services that you want to enable:
+  services = {
+    autorandr.enable = true;
+    blueman.enable = true;
+  # services.xserver.digimend.enable = true; # Enable digimend driver for XP Pen tablet
+    gnome.gnome-keyring.enable = true;
+    openssh.enable = true;
+    picom = {
+      enable = true;
+      inactiveOpacity = 0.8;
+      backend = "glx";
+      vSync = true;
+    # experimentalBackends = true;
+    }; 
+    # printing.enable = true; # Enable CUPS to print documents.
+  };
+
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
