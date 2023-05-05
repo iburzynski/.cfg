@@ -4,35 +4,29 @@
 
 { config, pkgs, lib, ... }:
 
+let
+  nvidia-offload = pkgs.writeShellScriptBin "nvidia-offload" ''
+    export __NV_PRIME_RENDER_OFFLOAD=1
+    export __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0
+    export __GLX_VENDOR_LIBRARY_NAME=nvidia
+    export __VK_LAYER_NV_optimus=NVIDIA_only
+    exec "$@"
+    '';
+in
 {
 
   nix = {
-    package = pkgs.nixFlakes; # or versioned attributes like nixVersions.nix_2_8
-    extraOptions = ''
-      experimental-features = nix-command flakes ca-derivations
-    '';
+    package = pkgs.nixUnstable; # or versioned attributes like nixVersions.nix_2_8
     gc = {
       automatic = true;
       dates = "weekly";
       options = "--delete-older-than 7d";
     };
     settings = {
-      allow-import-from-derivation = true;
       auto-optimise-store = true;
-      keep-derivations = true;
       keep-outputs = true;
       trusted-users = [ "root" "ian" ];
-      # Binary Caches
-      substituters = [
-        "https://cache.iog.io"
-        "https://iohk.cachix.org"
-        "https://cache.zw3rk.com"
-      ];
-      trusted-public-keys = [
-        "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
-        "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
-        "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
-      ];
+      experimental-features = [ "nix-command" "flakes" ];
     }; 
   };
 
@@ -50,6 +44,14 @@
     };
     pulseaudio.enable = true;
     bluetooth.enable = true;
+    nvidia = {
+      modesetting.enable = true;
+      prime = {
+        offload.enable = true;
+        intelBusId = "PCI:0:2:0";
+        nvidiaBusId = "PCI:1:0:0";
+      };
+    };
   };
 
   boot = {
@@ -94,7 +96,9 @@
     external-display.configuration = {
       system.nixos.tags = [ "external-display" ];
     # Note: nvidia driver must be enabled for xserver to start when in nvidia mode
-      services.xserver.videoDrivers = [ "nvidia" ];
+    #  services.xserver.videoDrivers = [ "nvidia" ];
+    hardware.nvidia.prime.offload.enable = lib.mkForce false;
+    hardware.nvidia.powerManagement.enable = lib.mkForce false;
     };
   };
 
@@ -109,11 +113,10 @@
   # Packages installed in system profile
   nixpkgs.config.allowUnfree = true;
 
-  environment.systemPackages = with pkgs; [
+  environment.systemPackages = [nvidia-offload] ++ (with pkgs; [
     
     # Display
     # linuxKernel.packages.linux_latest_libre.system76-power
-
     # Drivers
     # pentablet-driver
 
@@ -196,7 +199,7 @@
     # clojure-lsp
     # leiningen
 
-  ];
+  ]);
   # environment.variables.EDITOR = "nvim";
 
   virtualisation.docker.enable = true;
@@ -219,12 +222,6 @@
     };
     light.enable = true; # Enable brightness control
     mtr.enable = true;
-    neovim = {
-      enable = true;
-      defaultEditor = true;
-      viAlias = true;
-      vimAlias = true;
-    };
   # steam.enable = true;
   };
   
@@ -273,6 +270,8 @@
         };
       };
       displayManager.defaultSession = "none+xmonad";
+      displayManager.xserverArgs = [ "-logfile" "/var/log/X.log" ];
+      videoDrivers = ["nvidia"];
       xkbOptions = "caps:escape";
     
       # Enable touchpad support (enabled default in most desktopManager).
@@ -320,6 +319,17 @@
         zoom-us
       ];
       stateVersion = "22.11";
+    };
+    programs = {
+      neovim = {
+        enable = true;
+	defaultEditor = true;
+        viAlias = true;
+        vimAlias = true;
+	extraConfig = ''
+          set number
+        '';
+      };
     };
   };
 

@@ -1,4 +1,4 @@
-xterm*faceName: Hasklug Nerd Font:style=Regular:size=12:antialias=true, Noto Color Emoji:style=Regular:size=12:antialias=true
+xterm*faceName: Hasklug Nerd Font:style=Regular:size=14:antialias=true, Noto Color Emoji:style=Regular:size=12:antialias=true
 xterm*faceNameDoublesize: Noto Color Emoji:style=Regular:size=12:antialias=true
 Xft.dpi: 96
 
